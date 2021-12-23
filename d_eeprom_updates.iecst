@@ -1,0 +1,54 @@
+scan_counter := scan_counter + 1;	
+IF scan_counter > update_rate THEN	(* give eeprom a breather *)
+	IF x_req_on AND NOT x_master_en THEN
+		sysWriteParBOOL(ADR(e2_ahu_en),TRUE);
+	END_IF;
+	
+	IF x_req_off AND e2_ahu_en THEN
+		sysWriteParBOOL(ADR(e2_ahu_en),FALSE);
+	END_IF;
+	
+	IF x_req_auto AND NOT (e2_ahu_mode = 2) THEN (* 0=cool 1=heat 2=auto *)
+		sysWriteParINT(ADR(e2_ahu_mode),2);
+	END_IF;
+	
+	IF x_req_cool AND NOT (e2_ahu_mode = 0) THEN (* 0=cool 1=heat 2=auto *)
+		sysWriteParINT(ADR(e2_ahu_mode),0);
+	END_IF;
+	
+	IF x_req_heat AND NOT (e2_ahu_mode = 2) THEN (* 0=cool 1=heat 2=auto *)
+		sysWriteParINT(ADR(E2_usiChangeOver),1);
+	END_IF;
+	
+	IF ui_mb_temp_setpt <> e2_temp_setpt THEN
+		sysWriteParINT(ADR(e2_temp_setpt),ui_mb_temp_setpt*10);
+	END_IF;
+	
+	IF ui_mb_press_setpt <> e2_pressure_setpt THEN
+		sysWriteParINT(ADR(e2_pressure_setpt),ui_mb_press_setpt);
+	END_IF;
+	
+	IF x_req_pressure_control AND (e2_pressure_mode = 0) THEN
+		sysWriteParINT(ADR(e2_pressure_mode),1);
+	END_IF;
+	
+	IF NOT(x_req_pressure_control) AND (e2_pressure_mode = 1) THEN
+		sysWriteParINT(ADR(e2_pressure_mode),0);
+	END_IF;
+	
+	IF write_time THEN
+		sysClockWrite(TO_USINT(0), TO_USINT(uiSetMin), TO_USINT(uiSetHour), TO_USINT(uiSetWeekday), TO_USINT(uiSetDay), TO_USINT(uiSetMonth), TO_USINT(uiSetYear));
+		writeTime := FALSE;
+	END_IF;
+	
+	IF write_schedule THEN
+		sysWriteParUINT(ADR(E2_uiEventTime_1),uiOccTimeSet);
+		sysWriteParUSINT(ADR(E2_usiEventWeekDays_1),TO_USINT(uiOccDaysSet));
+		sysWriteParUINT(ADR(E2_uiEventTime_2),uiEcoTimeSet);
+		sysWriteParUSINT(ADR(E2_usiEventWeekDays_2),TO_USINT(uiEcoDaysSet));
+		sysWriteParUINT(ADR(E2_uiEventTime_3),uiOffTimeSet);
+		sysWriteParUSINT(ADR(E2_usiEventWeekDays_3),TO_USINT(uiOffDaysSet));
+		write_schedule := FALSE;
+	END_IF;
+	scan_counter := 0;
+END_IF;

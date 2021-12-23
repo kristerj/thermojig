@@ -1,0 +1,12 @@
+ui_mb_status_word.0 	:= x_master_en;
+ui_mb_status_word.1 	:= x_auto_status;
+ui_mb_status_word.2 	:= x_cool_status;
+ui_mb_status_word.3 	:= x_heat_status;
+ui_mb_status_word.4 	:= x_setback_mode_status;
+ui_mb_status_word.5 	:= x_DO1_status;
+ui_mb_status_word.6 	:= x_DO2_status;
+ui_mb_status_word.7 	:= x_DO3_status;
+ui_mb_status_word.8 	:= x_DO4_status;
+ui_mb_status_word.9 	:= x_DO5_status;
+ui_mb_status_word.10 	:= x_DO6_status;
+ui_mb_status_word.11	:= x_DO7_status;

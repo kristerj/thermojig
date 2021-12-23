@@ -1,0 +1,55 @@
+x_req_on 				:= ui_mb_cmd_word.0;
+x_req_off 				:= ui_mb_cmd_word.1;
+x_req_auto 				:= ui_mb_cmd_word.2;
+x_req_cool 				:= ui_mb_cmd_word.3;
+x_req_heat 				:= ui_mb_cmd_word.4;
+x_req_pressure_control	:= ui_mb_cmd_word.5;
+x_req_set_time 			:= ui_mb_cmd_word.6
+x_req_set_sched 		:= ui_mb_cmd_word.7
+x_req_remote_occ 		:= ui_mb_cmd_word.8
+
+RTrig_time(clk:= x_req_set_time);
+RTrig_schedule(clk:= x_req_set_sched);
+
+TON_remote_occ_PT := ui_mb_remote_occ_min * 60000;
+TON_remote_occ_TT := (TON_remote_occ.ET > 0) AND (TON_remote_occ.ET < TON_remote_occ.PT);
+TON_remote_occ_IN := (TON_remote_occ_TT OR x_req_remote_occ);
+TON_remote_occ(PT := TON_remote_occ_PT, IN := TON_remote_occ_IN);
+ui_mb_remote_occ_min := (TON_remote_occ_PT - TON_remote_occ.ET)/60000;
+
+
+IF TON_remote_occ_TT THEN
+	usi_mb_remote_event := 1;
+
+END_IF;
+
+IF NOT TON_remote_occ_TT THEN
+	usi_mb_remote_event := 0;
+	ui_mb_remote_occ_min := 0;
+END_IF;
+
+
+
+IF RTrig_time.q THEN
+	write_time := TRUE;
+END_IF;
+
+
+IF RTrig_schedule.q THEN
+	write_schedule := TRUE;
+END_IF;
+
+missed := sysMbMRtuNodeStatus[4].miss;
+present := sysMbMRtuNodeStatus[4].pres;
+
+IF missed OR (NOT present) THEN
+	fail_counter := fail_counter +1;
+	IF fail_counter > fail_allowed THEN
+		x_mb_alarm := TRUE;
+	END_IF;
+END_IF;
+
+IF (NOT missed) AND present THEN
+	fail_counter := 0;
+	x_mb_alarm := FALSE;
+END_IF;
